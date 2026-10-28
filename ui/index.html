@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Net-Settle</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --card: #ffffff; --ink: #1b1f27; --muted: #667085;
+    --line: #e4e7ec; --brand: #0f766e; --brand-ink: #ffffff;
+    --owe: #c2410c; --get: #15803d; --owe-bg: #fff1e8; --get-bg: #e8f7ee;
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101319; --card: #181c24; --ink: #e8ebf0; --muted: #98a2b3;
+      --line: #2a303b; --brand: #2dd4bf; --brand-ink: #06231f;
+      --owe: #fb923c; --get: #4ade80; --owe-bg: #2b1a10; --get-bg: #12261a;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 28px 20px 8px; max-width: 1100px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
+  h1 { margin: 0; font-size: 26px; letter-spacing: -.02em; }
+  h1 span { color: var(--brand); }
+  .tag { color: var(--muted); margin: 2px 0 0; }
+  .stats { display: flex; gap: 20px; color: var(--muted); font-size: 13px; }
+  .stats b { display: block; color: var(--ink); font-size: 18px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px 20px 48px;
+    display: grid; grid-template-columns: 360px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+  .col { display: grid; gap: 20px; }
+  section { background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 18px; box-shadow: var(--shadow); }
+  h2 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input, select { width: 100%; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 10px; background: transparent; color: var(--ink); font: inherit; }
+  input:focus, select:focus, button:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+  .row { display: flex; gap: 8px; }
+  .row input { flex: 1; }
+  button { padding: 10px 14px; border: 0; border-radius: 10px; background: var(--brand);
+    color: var(--brand-ink); font: inherit; font-weight: 600; cursor: pointer; }
+  button.full { width: 100%; margin-top: 14px; }
+  button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  button:hover { filter: brightness(1.06); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { position: relative; }
+  .chip input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+  .chip span { display: block; padding: 6px 12px; border: 1px solid var(--line);
+    border-radius: 999px; font-size: 14px; color: var(--muted); }
+  .chip input:checked + span { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+  .chip input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .empty { color: var(--muted); padding: 8px 0; }
+  .bal { display: grid; grid-template-columns: 110px 1fr auto; gap: 12px; align-items: center; padding: 8px 0; }
+  .bal + .bal { border-top: 1px solid var(--line); }
+  .bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 99px; }
+  .owes i { background: var(--owe); } .receives i { background: var(--get); }
+  .amt { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; min-width: 110px; }
+  .owes .amt { color: var(--owe); } .receives .amt { color: var(--get); } .settled .amt { color: var(--muted); }
+  .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pay { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px;
+    background: var(--owe-bg); margin-bottom: 8px; flex-wrap: wrap; }
+  .pay .arrow { color: var(--muted); }
+  .pay .amt { margin-left: auto; color: var(--owe); }
+  .done { padding: 14px; border-radius: 10px; background: var(--get-bg); color: var(--get); font-weight: 600; }
+  .fee { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; color: var(--muted); font-size: 14px; }
+  .fee input { width: 110px; }
+  .fee b { color: var(--ink); }
+  .exp { padding: 10px 0; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
+  .exp + .exp { border-top: 1px solid var(--line); }
+  .exp small { color: var(--muted); grid-column: 1 / -1; }
+  .badge { font-size: 12px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); margin-left: 6px; }
+  .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .head h2 { margin: 0; }
+  .warn { background: var(--owe-bg); color: var(--owe); padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0;
+    background: #b42318; color: #fff; padding: 10px 16px; border-radius: 10px; transition: .2s;
+    pointer-events: none; max-width: 90vw; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .sr { position: absolute; left: -9999px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Net<span>-Settle</span></h1>
+    <p class="tag">Smart group expense &amp; debt minimiser</p>
+  </div>
+  <div class="stats">
+    <div><b id="s-total">Rs. 0.00</b>total spent</div>
+    <div><b id="s-members">0</b>members</div>
+    <div><b id="s-transfers">0</b>transfers</div>
+  </div>
+</header>
+
+<main>
+  <div class="col">
+    <section>
+      <h2>Add member</h2>
+      <form id="member-form" class="row">
+        <label class="sr" for="member-name">Member name</label>
+        <input id="member-name" placeholder="e.g. Shreya" autocomplete="off" required>
+        <button type="submit">Add</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Record expense</h2>
+      <form id="expense-form">
+        <label for="payer">Who paid?</label>
+        <select id="payer" required></select>
+        <label for="amount">Total amount (₹)</label>
+        <input id="amount" inputmode="decimal" placeholder="0.00" required>
+        <label for="desc">Description</label>
+        <input id="desc" placeholder="Dinner, cab, rent..." required>
+        <label for="cat">Category</label>
+        <input id="cat" list="cats" placeholder="food, travel, rent..." required>
+        <datalist id="cats"><option>food</option><option>travel</option><option>rent</option><option>utilities</option><option>fun</option></datalist>
+        <label id="split-label">Split between</label>
+        <div id="participants" class="chips" role="group" aria-labelledby="split-label"></div>
+        <button class="full" type="submit">Add expense</button>
+      </form>
+    </section>
+  </div>
+
+  <div class="col">
+    <section>
+      <h2>Net balances</h2>
+      <div id="balances"></div>
+    </section>
+
+    <section>
+      <div class="head">
+        <h2>Recommended settlements</h2>
+        <button class="ghost" id="export" type="button">Export CSV</button>
+      </div>
+      <div id="warning"></div>
+      <div id="settlements"></div>
+      <div class="fee">
+        <label for="fee" style="margin:0">Fee per transfer (₹)</label>
+        <input id="fee" inputmode="decimal" placeholder="0">
+        <span>Estimated total fees: <b id="fees">Rs. 0.00</b></span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Expense history</h2>
+      <div id="expenses"></div>
+    </section>
+  </div>
+</main>
+<div id="toast" role="alert"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = t => t.replace('Rs. ', '₹');
+
+let known = new Set();       // members we have already seen
+let selected = new Set();    // members ticked in "Split between"
+let toastTimer;
+
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+async function api(path, body) {
+  const opts = body === undefined ? {} : {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  };
+  const res = await fetch(path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function render(s) {
+  $('#s-total').textContent = fmt(s.total_expense);
+  $('#s-members').textContent = s.members.length;
+  $('#s-transfers').textContent = s.transfer_count;
+  $('#fees').textContent = fmt(s.total_fees);
+
+  // members: newly added ones start ticked
+  s.members.forEach(m => { if (!known.has(m)) selected.add(m); });
+  known = new Set(s.members);
+  selected = new Set([...selected].filter(m => known.has(m)));
+
+  const payer = $('#payer'), prev = payer.value;
+  payer.innerHTML = s.members.map(m => `<option>${esc(m)}</option>`).join('');
+  if (known.has(prev)) payer.value = prev;
+
+  $('#participants').innerHTML = s.members.length
+    ? s.members.map(m => `<label class="chip"><input type="checkbox" value="${esc(m)}" ${selected.has(m) ? 'checked' : ''}><span>${esc(m)}</span></label>`).join('')
+    : '<span class="empty">Add members first.</span>';
+
+  const max = Math.max(1, ...s.balances.map(b => Math.abs(b.paise)));
+  $('#balances').innerHTML = s.balances.length ? s.balances.map(b => `
+    <div class="bal ${b.status}">
+      <div class="name" title="${esc(b.name)}">${esc(b.name)}</div>
+      <div class="bar"><i style="width:${Math.abs(b.paise) / max * 100}%"></i></div>
+      <div class="amt">${b.status === 'owes' ? 'owes ' : b.status === 'receives' ? 'gets ' : ''}${b.status === 'settled' ? 'settled' : fmt(b.text)}</div>
+    </div>`).join('') : '<div class="empty">No members yet.</div>';
+
+  $('#warning').innerHTML = s.warning ? `<div class="warn">${esc(s.warning)}</div>` : '';
+  $('#settlements').innerHTML = s.settlements.length
+    ? s.settlements.map(p => `<div class="pay"><b>${esc(p.from)}</b><span class="arrow">pays</span><b>${esc(p.to)}</b><span class="amt">${fmt(p.amount)}</span></div>`).join('')
+    : (s.expenses.length ? '<div class="done">Everyone is settled up.</div>' : '<div class="empty">Record an expense to see settlements.</div>');
+
+  $('#expenses').innerHTML = s.expenses.length
+    ? s.expenses.slice().reverse().map(e => `
+      <div class="exp"><div><b>${esc(e.description)}</b><span class="badge">${esc(e.category)}</span></div>
+      <div class="amt">${fmt(e.amount)}</div>
+      <small>Paid by ${esc(e.payer)} · split: ${e.participants.map(esc).join(', ')}</small></div>`).join('')
+    : '<div class="empty">No expenses recorded.</div>';
+}
+
+async function refresh() {
+  try { render(await api('/api/state?fee=' + encodeURIComponent($('#fee').value))); }
+  catch (e) { toast(e.message); }
+}
+
+async function post(path, body) {
+  try {
+    render(await api(path, body));
+    return true;
+  } catch (e) { toast(e.message); return false; }
+}
+
+$('#member-form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  if (await post('/api/members', {name: $('#member-name').value})) {
+    $('#member-name').value = '';
+  }
+});
+
+$('#participants').addEventListener('change', ev => {
+  const cb = ev.target;
+  if (cb.type === 'checkbox') cb.checked ? selected.add(cb.value) : selected.delete(cb.value);
+});
+
+$('#expense-form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const ok = await post('/api/expenses', {
+    payer: $('#payer').value, amount: $('#amount').value,
+    description: $('#desc').value, category: $('#cat').value,
+    participants: [...selected]
+  });
+  if (ok) { $('#amount').value = ''; $('#desc').value = ''; $('#amount').focus(); refresh(); }
+});
+
+$('#fee').addEventListener('input', refresh);
+$('#export').addEventListener('click', () => { window.location.href = '/api/report.csv'; });
+
+refresh();
+setInterval(() => { if (!document.hidden && !document.activeElement.closest('form')) refresh(); }, 4000);
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+netsettle_data.json
+netsettle_data.json.tmp
