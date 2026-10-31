@@ -60,11 +60,16 @@ Recommended settlement: `A pays C: Rs. 500.00` (1 transfer instead of 2).
 
 ```
 Net_Settle/
-├── main.py                # CLI menu and program entry point
+├── main.py                # CLI menu, command-line flags, program entry point
 ├── expense_manager.py     # Members, expenses, balances, debt graph, money helpers
 ├── settlement.py          # SettlementEngine: heap-based debt minimisation + fee estimate
+├── storage.py             # JSON save/load shared by the CLI and the web UI
+├── server.py              # Local web server and JSON API 
+├── ui/
+│   └── index.html         # Browser front end served by server.py
 ├── reports.py             # CSV report export
-└── settlement_report.csv  # Sample generated report
+├── settlement_report.csv  # Sample generated report
+└── netsettle_data.json    # Saved data 
 ```
 
 | File | Responsibility |
@@ -98,7 +103,8 @@ python main.py
 4. View net balances
 5. Calculate settlements
 6. Export CSV report
-7. Exit
+7. Open web UI
+8. Exit
 ```
 
 ## Sample Session
